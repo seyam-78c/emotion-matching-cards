@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emotion Matching Cards - Ages 3-5</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- Google Fonts for playful look -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Fredoka', cursive, sans-serif;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .font-nunito {
+      font-family: 'Nunito', sans-serif;
+    }
+    /* 3D Flip Card Styles */
+    .perspective-1000 {
+      perspective: 1000px;
+    }
+    .transform-style-3d {
+      transform-style: preserve-3d;
+    }
+    .backface-hidden {
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .rotate-y-180 {
+      transform: rotateY(180deg);
+    }
+    /* Gentle bobbing animation */
+    @keyframes gentle-bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .animate-gentle {
+      animation: gentle-bounce 2.5s infinite ease-in-out;
+    }
+    /* Calming breath pulse */
+    @keyframes breathe {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.35); opacity: 1; }
+    }
+    .animate-breathe {
+      animation: breathe 5s infinite ease-in-out;
+    }
+    /* Card box pattern */
+    .polka-dot-bg {
+      background-color: #fffbeb;
+      background-image: radial-gradient(#fde047 2px, transparent 2px), radial-gradient(#fde047 2px, #fffbeb 2px);
+      background-size: 24px 24px;
+      background-position: 0 0, 12px 12px;
+    }
+  </style>
+</head>
+<body class="bg-amber-50 min-h-screen flex flex-col text-slate-800 antialiased polka-dot-bg">
+
+  <!-- Header Section -->
+  <header class="w-full bg-white/90 backdrop-blur-md shadow-md border-b-4 border-amber-300 py-3 px-4 sm:px-8 sticky top-0 z-50">
+    <div class="max-w-5xl mx-auto flex items-center justify-between">
+      
+      <!-- Logo & Age Badge -->
+      <div class="flex items-center gap-3 cursor-pointer" onclick="switchMode('box')">
+        <div class="w-12 h-12 bg-amber-400 rounded-2xl flex items-center justify-center text-3xl shadow-md border-2 border-amber-500 transform hover:rotate-6 transition">
+          ❤️
+        </div>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-black text-amber-600 tracking-wide flex items-center gap-2">
+            Emotion Cards
+            <span class="bg-yellow-200 text-yellow-800 text-xs font-bold px-2.5 py-0.5 rounded-full border border-yellow-400">Ages 3–5</span>
+          </h1>
+          <p class="text-xs text-slate-500 font-nunito hidden sm:block">Recognize, feel & share emotions!</p>
+        </div>
+      </div>
+
+      <!-- Audio Mute and Sound Effects -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <button id="audio-toggle-btn" onclick="toggleAudio()" class="flex items-center gap-2 px-3 py-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded-2xl border-2 border-yellow-300 font-bold text-sm shadow-sm transition active:scale-95">
+          <span id="sound-icon" class="text-lg">🔊</span>
+          <span class="hidden sm:inline" id="sound-label">Sound ON</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Mode Buttons -->
+  <main class="flex-grow max-w-5xl w-full mx-auto p-4 sm:p-6 flex flex-col items-center">
+    <nav class="flex flex-wrap justify-center gap-3 sm:gap-4 my-2 sm:my-4 w-full">
+      <button onclick="switchMode('box')" id="nav-btn-box" class="nav-tab active-tab px-4 py-2.5 sm:px-6 sm:py-3 rounded-2xl font-bold text-base sm:text-lg shadow-md border-b-4 transition-all duration-200 flex items-center gap-2 bg-yellow-400 border-yellow-600 text-amber-950 scale-105">
+        <span>📦</span> Pick & Share
+      </button>
+      <button onclick="switchMode('memory')" id="nav-btn-memory" class="nav-tab px-4 py-2.5 sm:px-6 sm:py-3 rounded-2xl font-bold text-base sm:text-lg shadow-md border-b-4 transition-all duration-200 flex items-center gap-2 bg-white border-slate-300 text-slate-700 hover:bg-slate-50">
+        <span>🧩</span> Memory Game
+      </button>
+      <button onclick="switchMode('checkin')" id="nav-btn-checkin" class="nav-tab px-4 py-2.5 sm:px-6 sm:py-3 rounded-2xl font-bold text-base sm:text-lg shadow-md border-b-4 transition-all duration-200 flex items-center gap-2 bg-white border-slate-300 text-slate-700 hover:bg-slate-50">
+        <span>🌈</span> Daily Check-In
+      </button>
+    </nav>
+
+    <!-- ================= MODE 1: CARD PICK & SHARE ================= -->
+    <section id="mode-box" class="w-full flex flex-col items-center mt-2">
+      <!-- Description Banner -->
+      <div class="text-center mb-6 max-w-xl">
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-amber-800">Pick a Feeling Card!</h2>
+        <p class="text-slate-600 text-sm sm:text-base font-nunito mt-1">Tap the card box to pull out an emotion, or click any card below!</p>
+      </div>
+
+      <!-- Cute Physical Card Box Container (Craft Style) -->
+      <div class="relative w-full max-w-md my-4 flex flex-col items-center">
+        <!-- Interactive 3D Card Display Area -->
+        <div id="deck-card-container" class="w-64 h-84 sm:w-72 sm:h-96 perspective-1000 mb-6 cursor-pointer" onclick="flipActiveCard()">
+          <div id="active-card-inner" class="w-full h-full relative transform-style-3d transition-transform duration-500 rounded-3xl shadow-xl">
+            <!-- Front Face (Box Back or Cover) -->
+            <div id="card-cover-side" class="w-full h-full absolute backface-hidden rounded-3xl bg-gradient-to-br from-yellow-300 via-amber-300 to-yellow-400 border-4 border-yellow-500 p-6 flex flex-col items-center justify-between text-center shadow-lg">
+              <div class="flex justify-between w-full text-2xl">
+                <span>❤️</span><span>💛</span><span>💙</span>
+              </div>
+              <div class="bg-white/95 rounded-2xl p-4 shadow-sm border-2 border-yellow-400 w-full">
+                <span class="text-xs uppercase tracking-wider text-amber-700 font-extrabold">Tap to Open</span>
+                <h3 class="text-2xl font-extrabold text-amber-900 mt-1">Emotion Cards</h3>
+                <p class="text-xs text-amber-600 font-nunito mt-1">Ages 3–5 Years</p>
+              </div>
+              <div class="text-5xl animate-gentle">🎁</div>
+              <p class="text-amber-900 font-bold text-sm bg-yellow-200/80 px-3 py-1 rounded-full border border-yellow-400">Tap to draw a card!</p>
+              <div class="flex justify-between w-full text-2xl">
+                <span>💚</span><span>💜</span><span>💖</span>
+              </div>
+            </div>
+
+            <!-- Back Face (Revealed Emotion Card) -->
+            <div id="card-revealed-side" class="w-full h-full absolute backface-hidden rotate-y-180 rounded-3xl bg-white border-8 p-4 flex flex-col items-center justify-between shadow-xl">
+              <!-- Rendered Dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls below active card -->
+        <div class="flex flex-wrap items-center justify-center gap-3">
+          <button onclick="drawRandomCard()" class="px-5 py-3 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-extrabold rounded-2xl shadow-md border-b-4 border-amber-700 text-lg flex items-center gap-2">
+            <span>✨</span> Pick Another Card!
+          </button>
+          <button id="speak-card-btn" onclick="speakCurrentCard()" class="px-5 py-3 bg-blue-500 hover:bg-blue-600 active:scale-95 text-white font-extrabold rounded-2xl shadow-md border-b-4 border-blue-700 text-lg flex items-center gap-2">
+            <span>🔊</span> Hear It Aloud
+          </button>
+        </div>
+      </div>
+
+      <!-- Sharing Prompt Questions Container -->
+      <div id="sharing-prompt-box" class="w-full max-w-2xl bg-white rounded-3xl p-5 sm:p-6 shadow-md border-4 border-amber-200 mt-6 transition-all">
+        <div class="flex items-center gap-3 mb-3">
+          <span class="text-3xl">🗣️</span>
+          <h4 id="prompt-question" class="text-xl sm:text-2xl font-black text-amber-900">When do you feel Happy?</h4>
+        </div>
+        <p class="text-slate-600 font-nunito mb-4 text-sm sm:text-base">Talk with a grown-up or a friend about what makes you feel this way. Here are some fun ideas:</p>
+        <div id="prompt-ideas-list" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <!-- Ideas rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- 6 Emotion Quick Select Cards Grid (Mirrors the reference craft layout) -->
+      <div class="w-full max-w-4xl mt-10">
+        <h3 class="text-xl font-black text-amber-900 text-center mb-4">Or choose an emotion card:</h3>
+        <div id="all-cards-preview-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 sm:gap-4">
+          <!-- Generated via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= MODE 2: MEMORY MATCH GAME ================= -->
+    <section id="mode-memory" class="w-full hidden flex-col items-center">
+      <div class="text-center mb-4">
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-blue-800">Find the Matching Pairs!</h2>
+        <p class="text-slate-600 text-sm sm:text-base font-nunito">Tap cards to flip them over and match identical emotion faces.</p>
+      </div>
+
+      <!-- Game Stats Bar -->
+      <div class="flex items-center justify-between w-full max-w-xl bg-white rounded-2xl px-5 py-3 shadow-md border-2 border-blue-200 mb-6">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">⭐</span>
+          <div>
+            <div class="text-xs text-slate-400 font-bold">MATCHES</div>
+            <div id="memory-matches-count" class="text-lg font-black text-blue-700">0 / 6</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">👀</span>
+          <div>
+            <div class="text-xs text-slate-400 font-bold">TAPS</div>
+            <div id="memory-taps-count" class="text-lg font-black text-slate-700">0</div>
+          </div>
+        </div>
+        <button onclick="initMemoryGame()" class="px-3 py-2 bg-yellow-400 hover:bg-yellow-500 active:scale-95 text-amber-950 font-bold rounded-xl text-sm border-2 border-yellow-500 shadow-sm">
+          🔄 Restart
+        </button>
+      </div>
+
+      <!-- Memory Cards Grid (3x4 = 12 cards for 6 pairs) -->
+      <div id="memory-grid" class="grid grid-cols-3 sm:grid-cols-4 gap-3 sm:gap-4 max-w-xl w-full">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- ================= MODE 3: DAILY EMOTION CHECK-IN ================= -->
+    <section id="mode-checkin" class="w-full hidden flex-col items-center">
+      <div class="text-center mb-6">
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-purple-800">How are you feeling right now?</h2>
+        <p class="text-slate-600 text-sm sm:text-base font-nunito">Tap the face that looks the most like how you feel today!</p>
+      </div>
+
+      <!-- 6 Emotions Selection Grid -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-2xl w-full mb-8" id="checkin-faces-grid">
+        <!-- Built by script -->
+      </div>
+
+      <!-- Feedback / Calming Interaction Card -->
+      <div id="checkin-response-card" class="w-full max-w-xl bg-white rounded-3xl p-6 shadow-lg border-4 border-purple-200 hidden flex flex-col items-center text-center">
+        <!-- Filled on emotion tap -->
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="py-4 text-center text-xs text-amber-800/70 font-nunito mt-8 border-t border-amber-200">
+    Emotion Matching Cards &bull; Designed for Social-Emotional Learning (Ages 3–5)
+  </footer>
+
+  <!-- ================= JAVASCRIPT LOGIC ================= -->
+  <script>
+    /* ====================================================================
+       1. DATA DEFINITIONS & SVG CHARACTER ARTWORK
+       Matches the 6 emotions from the physical craft cards:
+       - Happy (Yellow border, smiling, closed happy eyes)
+       - Sad (Blue border, single tear, frowning)
+       - Angry (Red border, furrowed brows, angry mouth)
+       - Scared (Green border, wide worried eyes, trembling hands on mouth)
+       - Surprised (Purple/Indigo border, rounded 'O' mouth, surprise sparks)
+       - Excited (Pink/Rose border, arms raised up cheering, open smile)
+       ==================================================================== */
+    const EMOTIONS = [
+      {
+        id: 'happy',
+        name: 'Happy',
+        themeColor: '#eab308', // Yellow
+        bgColor: '#fefce8',
+        borderColor: '#facc15',
+        borderClass: 'border-yellow-400',
+        textColor: 'text-amber-800',
+        badgeBg: 'bg-yellow-400',
+        question: 'When do you feel Happy?',
+        speechText: 'I feel Happy! Like when I play outside with my best friends!',
+        calmActionType: 'celebrate',
+        calmTitle: 'Keep that sunshine smiling!',
+        calmText: 'Happiness is lovely to share! Give a big high-five or a hug to someone near you!',
+        ideas: ['🎈 Playing with toys', '🍦 Tasting yummy ice cream', '🫂 Getting a warm hug']
+      },
+      {
+        id: 'sad',
+        name: 'Sad',
+        themeColor: '#3b82f6', // Blue
+        bgColor: '#eff6ff',
+        borderColor: '#60a5fa',
+        borderClass: 'border-blue-400',
+        textColor: 'text-blue-800',
+        badgeBg: 'bg-blue-400',
+        question: 'When do you feel Sad?',
+        speechText: 'I feel Sad. It is okay to cry and ask for a gentle hug.',
+        calmActionType: 'comfort',
+        calmTitle: 'It is okay to feel sad.',
+        calmText: 'Everyone feels sad sometimes. Wrapped in a cozy blanket or talking to a grown-up can help your heart feel better.',
+        ideas: ['💔 A broken favorite toy', '👋 Saying goodbye for now', '🩹 Having a sore knee']
+      },
+      {
+        id: 'angry',
+        name: 'Angry',
+        themeColor: '#ef4444', // Red
+        bgColor: '#fef2f2',
+        borderColor: '#f87171',
+        borderClass: 'border-red-400',
+        textColor: 'text-red-800',
+        badgeBg: 'bg-red-400',
+        question: 'When do you feel Angry?',
+        speechText: 'I feel Angry! Let us take three slow, deep breaths to cool down.',
+        calmActionType: 'breathe',
+        calmTitle: 'Cool Down Like an Ice Pop!',
+        calmText: 'Take a deep breath in through your nose like smelling a flower... and blow it out slowly like cooling hot soup.',
+        ideas: ['🛑 Having to stop playing', '🧱 When block towers fall', '😤 Having to share unexpectedly']
+      },
+      {
+        id: 'scared',
+        name: 'Scared',
+        themeColor: '#22c55e', // Green
+        bgColor: '#f0fdf4',
+        borderColor: '#4ade80',
+        borderClass: 'border-green-500',
+        textColor: 'text-emerald-800',
+        badgeBg: 'bg-green-500',
+        question: 'When do you feel Scared?',
+        speechText: 'I feel Scared. Holding a friendly hand makes me feel safe.',
+        calmActionType: 'grounding',
+        calmTitle: 'You are safe and brave!',
+        calmText: 'Hold a grown-up\'s hand or squeeze your favorite teddy bear tight. You are not alone!',
+        ideas: ['⚡ Loud thunder storms', '🌑 The dark bedtime room', '🐕 A very loud barking dog']
+      },
+      {
+        id: 'surprised',
+        name: 'Surprised',
+        themeColor: '#8b5cf6', // Purple
+        bgColor: '#faf5ff',
+        borderColor: '#a78bfa',
+        borderClass: 'border-purple-400',
+        textColor: 'text-purple-800',
+        badgeBg: 'bg-purple-400',
+        question: 'When do you feel Surprised?',
+        speechText: 'I feel Surprised! Wow, I did not expect that!',
+        calmActionType: 'wonder',
+        calmTitle: 'What a big surprise!',
+        calmText: 'Surprises make our eyes go wide and our mouth go "Ooh!". Take a moment to see what happened next!',
+        ideas: ['🎁 Opening a mystery gift', '🎉 A surprise party peek-a-boo', '🌈 Spotting a bright rainbow']
+      },
+      {
+        id: 'excited',
+        name: 'Excited',
+        themeColor: '#ec4899', // Pink
+        bgColor: '#fdf2f8',
+        borderColor: '#f472b6',
+        borderClass: 'border-pink-400',
+        textColor: 'text-pink-800',
+        badgeBg: 'bg-pink-400',
+        question: 'When do you feel Excited?',
+        speechText: 'I feel Excited! Yay! I want to jump and dance with joy!',
+        calmActionType: 'celebrate',
+        calmTitle: 'Wiggle and Dance!',
+        calmText: 'Your body is full of happy energy! Do a silly wiggle dance or jump up and down 3 times!',
+        ideas: ['🎂 Going to a birthday party', '🎢 A fun trip to the playground', '🚀 Learning something new!']
+      }
+    ];
+
+    /* SVGs for character faces mimicking the provided cards */
+    function getEmotionSvg(emotionId, size = 130) {
+      switch (emotionId) {
+        case 'happy':
+          return `
+            <svg width="${size}" height="${size}" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Hair Back -->
+              <path d="M30 80C30 40 50 18 80 18C110 18 130 40 130 80C130 88 128 100 125 106C118 78 42 78 35 106C32 100 30 88 30 80Z" fill="#58311d"/>
+              <!-- Face -->
+              <circle cx="80" cy="85" r="50" fill="#fed7aa"/>
+              <!-- Ears -->
+              <circle cx="28" cy="85" r="11" fill="#fed7aa"/>
+              <circle cx="132" cy="85" r="11" fill="#fed7aa"/>
+              <!-- Hair Front & Bangs -->
+              <path d="M32 75C34 50 52 26 80 26C108 26 126 50 128 75C120 54 105 48 95 56C85 45 70 46 62 55C50 48 38 58 32 75Z" fill="#58311d"/>
+              <!-- Rosy Cheeks -->
+              <circle cx="50" cy="94" r="9" fill="#f87171" opacity="0.45"/>
+              <circle cx="110" cy="94" r="9" fill="#f87171" opacity="0.45"/>
+              <!-- Happy Eyes (curved arcs) -->
+              <path d="M50 78C53 72 65 72 68 78" stroke="#372013" stroke-width="4.5" stroke-linecap="round"/>
+              <path d="M92 78C95 72 107 72 110 78" stroke="#372013" stroke-width="4.5" stroke-linecap="round"/>
+              <!-- Big Smiling Mouth with Tongue -->
+              <path d="M56 94C56 109 70 120 80 120C90 120 104 109 104 94Z" fill="#b91c1c"/>
+              <path d="M68 111C72 106 88 106 92 111C88 118 72 118 68 111Z" fill="#f472b6"/>
+              <path d="M54 94H106" stroke="#fed7aa" stroke-width="4"/>
+            </svg>
+          `;
+        case 'sad':
+          return `
+            <svg width="${size}" height="${size}" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Hair Back -->
+              <path d="M30 80C30 38 50 18 80 18C110 18 130 38 130 80C130 88 128 100 125 106C118 78 42 78 35 106C32 100 30 88 30 80Z" fill="#452317"/>
+              <!-- Face -->
+              <circle cx="80" cy="85" r="50" fill="#fed7aa"/>
+              <circle cx="28" cy="85" r="11" fill="#fed7aa"/>
+              <circle cx="132" cy="85" r="11" fill="#fed7aa"/>
+              <!-- Hair Boys Short Spiky -->
+              <path d="M30 72C33 46 54 24 80 24C106 24 127 46 130 72C122 55 108 50 98 57C88 47 72 47 64 56C52 50 38 58 30 72Z" fill="#452317"/>
+              <!-- Sad Angled Eyebrows -->
+              <path d="M48 68L64 74" stroke="#452317" stroke-width="4" stroke-linecap="round"/>
+              <path d="M112 68L96 74" stroke="#452317" stroke-width="4" stroke-linecap="round"/>
+              <!-- Glossy Sad Eyes -->
+              <ellipse cx="58" cy="82" rx="6.5" ry="8" fill="#1e293b"/>
+              <ellipse cx="102" cy="82" rx="6.5" ry="8" fill="#1e293b"/>
+              <circle cx="56" cy="79" r="2.5" fill="white"/>
+              <circle cx="100" cy="79" r="2.5" fill="white"/>
+              <!-- Tear Drop Falling -->
+              <path d="M113 90C113 90 118 97 118 101C118 104 115 106 112 106C109 106 107 104 107 101C107 97 113 90 113 90Z" fill="#38bdf8"/>
+              <!-- Frown Mouth -->
+              <path d="M66 107C72 101 88 101 94 107" stroke="#372013" stroke-width="4.5" stroke-linecap="round"/>
+            </svg>
+          `;
+        case 'angry':
+          return `
+            <svg width="${size}" height="${size}" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Hair Back -->
+              <path d="M30 80C30 38 50 18 80 18C110 18 130 38 130 80Z" fill="#3b1d11"/>
+              <!-- Red Flush Background on Face -->
+              <circle cx="80" cy="85" r="50" fill="#fecaca"/>
+              <circle cx="28" cy="85" r="11" fill="#fecaca"/>
+              <circle cx="132" cy="85" r="11" fill="#fecaca"/>
+              <!-- Spiky boy hair -->
+              <path d="M30 68C36 40 55 22 80 22C105 22 124 40 130 68C123 52 110 48 99 55C89 45 71 45 61 54C50 47 38 55 30 68Z" fill="#3b1d11"/>
+              <!-- Furrowed Fierce Brows -->
+              <path d="M50 72L70 79" stroke="#3b1d11" stroke-width="5" stroke-linecap="round"/>
+              <path d="M110 72L90 79" stroke="#3b1d11" stroke-width="5" stroke-linecap="round"/>
+              <!-- Glaring Eyes -->
+              <circle cx="61" cy="84" r="6" fill="#18181b"/>
+              <circle cx="99" cy="84" r="6" fill="#18181b"/>
+              <circle cx="63" cy="82" r="1.5" fill="white"/>
+              <circle cx="97" cy="82" r="1.5" fill="white"/>
+              <!-- Tight Angry Pout Mouth -->
+              <path d="M64 107C70 102 90 102 96 107" stroke="#7f1d1d" stroke-width="5" stroke-linecap="round"/>
+            </svg>
+          `;
+        case 'scared':
+          return `
+            <svg width="${size}" height="${size}" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Longer Bob Hair -->
+              <path d="M26 80C26 38 48 18 80 18C112 18 134 38 134 80C134 105 130 120 120 126C112 85 48 85 40 126C30 120 26 105 26 80Z" fill="#2d1c15"/>
+              <!-- Face -->
+              <circle cx="80" cy="85" r="50" fill="#fef08a" opacity="0.3"/>
+              <circle cx="80" cy="85" r="50" fill="#fed7aa"/>
+              <!-- Wide Worried Eyebrows -->
+              <path d="M52 66C58 63 68 66 70 70" stroke="#2d1c15" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+              <path d="M108 66C102 63 92 66 90 70" stroke="#2d1c15" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+              <!-- Huge wide eyes -->
+              <ellipse cx="58" cy="78" rx="8" ry="9" fill="white" stroke="#2d1c15" stroke-width="2"/>
+              <circle cx="58" cy="78" r="4.5" fill="#1f2937"/>
+              <ellipse cx="102" cy="78" rx="8" ry="9" fill="white" stroke="#2d1c15" stroke-width="2"/>
+              <circle cx="102" cy="78" r="4.5" fill="#1f2937"/>
+              <!-- Trembling small 'O' mouth -->
+              <ellipse cx="80" cy="100" rx="8" ry="7" fill="#881337"/>
+              <!-- Hands pressed over cheeks/mouth -->
+              <ellipse cx="58" cy="115" rx="14" ry="12" fill="#fed7aa" stroke="#fb923c" stroke-width="2"/>
+              <ellipse cx="102" cy="115" rx="14" ry="12" fill="#fed7aa" stroke="#fb923c" stroke-width="2"/>
+            </svg>
+          `;
+        case 'surprised':
+          return `
+            <svg width="${size}" height="${size}" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Surprise Sparks -->
+              <path d="M136 50L145 42M136 60L147 62M132 40L138 30" stroke="#f59e0b" stroke-width="3.5" stroke-linecap="round"/>
+              <!-- Hair -->
+              <path d="M30 78C30 38 50 18 80 18C110 18 130 38 130 78Z" fill="#542e18"/>
+              <circle cx="80" cy="85" r="50" fill="#fed7aa"/>
+              <circle cx="28" cy="85" r="11" fill="#fed7aa"/>
+              <circle cx="132" cy="85" r="11" fill="#fed7aa"/>
+              <!-- Hair Front -->
+              <path d="M32 70C36 46 54 25 80 25C106 25 124 46 128 70C120 54 107 48 97 56C87 45 71 46 62 55C51 49 39 56 32 70Z" fill="#542e18"/>
+              <!-- High Arched Eyebrows -->
+              <path d="M50 63C56 58 68 58 72 63" stroke="#542e18" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+              <path d="M88 63C92 58 104 58 110 63" stroke="#542e18" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+              <!-- Big Round Eyes -->
+              <circle cx="60" cy="76" r="8" fill="#18181b"/>
+              <circle cx="58" cy="74" r="2.5" fill="white"/>
+              <circle cx="100" cy="76" r="8" fill="#18181b"/>
+              <circle cx="98" cy="74" r="2.5" fill="white"/>
+              <!-- Big Open "O" Mouth -->
+              <circle cx="80" cy="102" r="12" fill="#881337"/>
+              <ellipse cx="80" cy="105" rx="7" ry="5" fill="#f43f5e"/>
+            </svg>
+          `;
+        case 'excited':
+          return `
+            <svg width="${size}" height="${size}" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Cheering Raised Hands -->
+              <circle cx="25" cy="70" r="10" fill="#fed7aa" stroke="#fb923c" stroke-width="2"/>
+              <path d="M25 80L34 100" stroke="#fed7aa" stroke-width="9" stroke-linecap="round"/>
+              <circle cx="135" cy="70" r="10" fill="#fed7aa" stroke="#fb923c" stroke-width="2"/>
+              <path d="M135 80L126 100" stroke="#fed7aa" stroke-width="9" stroke-linecap="round"/>
+              <!-- Hair -->
+              <path d="M30 80C30 38 50 18 80 18C110 18 130 38 130 80Z" fill="#3f2314"/>
+              <circle cx="80" cy="85" r="50" fill="#fed7aa"/>
+              <path d="M32 75C34 50 52 26 80 26C108 26 126 50 128 75C120 54 105 48 95 56C85 45 70 46 62 55C50 48 38 58 32 75Z" fill="#3f2314"/>
+              <!-- Cheeks -->
+              <circle cx="48" cy="94" r="9" fill="#f43f5e" opacity="0.4"/>
+              <circle cx="112" cy="94" r="9" fill="#f43f5e" opacity="0.4"/>
+              <!-- Happy Squeezing Eyes -->
+              <path d="M52 76L64 80L52 84" stroke="#27150c" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M108 76L96 80L108 84" stroke="#27150c" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <!-- Huge Open Grin -->
+              <path d="M54 94C54 114 70 124 80 124C90 124 106 114 106 94Z" fill="#991b1b"/>
+              <path d="M65 114C70 108 90 108 95 114Z" fill="#f472b6"/>
+              <path d="M52 94H108" stroke="#fed7aa" stroke-width="4"/>
+            </svg>
+          `;
+      }
+    }
+
+    /* ====================================================================
+       2. KID-FRIENDLY AUDIO ENGINE (Web Audio API Chimes + Speech Synthesis)
+       ==================================================================== */
+    let isSoundMuted = false;
+    let audioCtx = null;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContextClass();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function toggleAudio() {
+      isSoundMuted = !isSoundMuted;
+      const soundIcon = document.getElementById('sound-icon');
+      const soundLabel = document.getElementById('sound-label');
+      if (isSoundMuted) {
+        soundIcon.innerText = '🔇';
+        soundLabel.innerText = 'Sound OFF';
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+      } else {
+        soundIcon.innerText = '🔊';
+        soundLabel.innerText = 'Sound ON';
+        playKidChime('pop');
+      }
+    }
+
+    function playKidChime(type) {
+      if (isSoundMuted) return;
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+
+        if (type === 'flip') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(320, now);
+          osc.frequency.exponentialRampToValueAtTime(620, now + 0.12);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.13);
+        } else if (type === 'match') {
+          // Play 3 happy rising bell notes
+          const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+          notes.forEach((freq, index) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now + index * 0.1);
+            gain.gain.setValueAtTime(0.25, now + index * 0.1);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + index * 0.1 + 0.35);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + index * 0.1);
+            osc.stop(now + index * 0.1 + 0.36);
+          });
+        } else if (type === 'win') {
+          const notes = [523.25, 659.25, 783.99, 1046.5];
+          notes.forEach((freq, index) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now + index * 0.12);
+            gain.gain.setValueAtTime(0.3, now + index * 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + index * 0.12 + 0.45);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + index * 0.12);
+            osc.stop(now + index * 0.12 + 0.46);
+          });
+        } else if (type === 'pop') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.exponentialRampToValueAtTime(880, now + 0.08);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.09);
+        }
+      } catch (err) {
+        console.error('Audio play error:', err);
+      }
+    }
+
+    /* Web Speech Synthesis */
+    function speakText(text) {
+      if (isSoundMuted) return;
+      if (!('speechSynthesis' in window)) return;
+      
+      window.speechSynthesis.cancel(); // Stop any pending speech
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.rate = 0.95;  // Slightly slower for toddler clarity
+      utter.pitch = 1.25; // Gentle, friendly, upbeat tone
+      
+      // Attempt to pick a gentle English voice if available
+      const voices = window.speechSynthesis.getVoices();
+      const preferred = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Samantha') || v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Female')));
+      if (preferred) utter.voice = preferred;
+
+      window.speechSynthesis.speak(utter);
+    }
+
+    /* ====================================================================
+       3. NAVIGATION LOGIC
+       ==================================================================== */
+    let currentMode = 'box';
+
+    function switchMode(modeId) {
+      currentMode = modeId;
+      playKidChime('pop');
+
+      // Hide all sections
+      document.getElementById('mode-box').classList.add('hidden');
+      document.getElementById('mode-memory').classList.add('hidden');
+      document.getElementById('mode-checkin').classList.add('hidden');
+
+      // Reset tabs style
+      ['box', 'memory', 'checkin'].forEach(id => {
+        const btn = document.getElementById(`nav-btn-${id}`);
+        btn.classList.remove('active-tab', 'bg-yellow-400', 'border-yellow-600', 'text-amber-950', 'scale-105');
+        btn.classList.add('bg-white', 'border-slate-300', 'text-slate-700');
+      });
+
+      // Show active section
+      document.getElementById(`mode-${modeId}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`nav-btn-${modeId}`);
+      activeBtn.classList.add('active-tab', 'bg-yellow-400', 'border-yellow-600', 'text-amber-950', 'scale-105');
+      activeBtn.classList.remove('bg-white', 'border-slate-300', 'text-slate-700');
+
+      if (modeId === 'memory') {
+        initMemoryGame();
+      } else if (modeId === 'checkin') {
+        renderCheckinList();
+      }
+    }
+
+    /* ====================================================================
+       4. MODE 1: CARD PICK & SHARE IMPLEMENTATION
+       ==================================================================== */
+    let currentCardIndex = 0;
+    let isCardFlipped = false;
+
+    function renderRevealedCard(emotion) {
+      const container = document.getElementById('card-revealed-side');
+      container.style.borderColor = emotion.borderColor;
+      container.style.backgroundColor = emotion.bgColor;
+
+      container.innerHTML = `
+        <div class="w-full flex justify-between items-center px-1">
+          <span class="text-xs font-black uppercase tracking-wider px-2.5 py-1 rounded-full text-white ${emotion.badgeBg}">Emotion Card</span>
+          <span class="text-xl">✨</span>
+        </div>
+        
+        <!-- Large Emotion Face SVG -->
+        <div class="my-auto transform transition duration-300 hover:scale-110 flex items-center justify-center">
+          ${getEmotionSvg(emotion.id, 160)}
+        </div>
+
+        <!-- Emotion Title Banner -->
+        <div class="w-full text-center pb-2">
+          <div class="text-3xl sm:text-4xl font-black ${emotion.textColor} tracking-wide">${emotion.name}</div>
+          <span class="text-xs font-bold text-slate-500 font-nunito">Tap to flip back</span>
+        </div>
+      `;
+    }
+
+    function updatePromptBox(emotion) {
+      const questionEl = document.getElementById('prompt-question');
+      const ideasContainer = document.getElementById('prompt-ideas-list');
+      
+      questionEl.innerText = emotion.question;
+      ideasContainer.innerHTML = emotion.ideas.map(idea => `
+        <div class="bg-amber-100/70 border-2 border-amber-300/60 rounded-2xl p-3 text-center text-sm font-black text-amber-900 shadow-sm flex items-center justify-center gap-2">
+          ${idea}
+        </div>
+      `).join('');
+    }
+
+    function flipActiveCard() {
+      const inner = document.getElementById('active-card-inner');
+      isCardFlipped = !isCardFlipped;
+      playKidChime('flip');
+
+      if (isCardFlipped) {
+        inner.classList.add('rotate-y-180');
+        const emotion = EMOTIONS[currentCardIndex];
+        speakText(emotion.name + '! ' + emotion.speechText);
+      } else {
+        inner.classList.remove('rotate-y-180');
+      }
+    }
+
+    function selectCardDirectly(index) {
+      currentCardIndex = index;
+      const emotion = EMOTIONS[currentCardIndex];
+      renderRevealedCard(emotion);
+      updatePromptBox(emotion);
+      
+      const inner = document.getElementById('active-card-inner');
+      if (!isCardFlipped) {
+        isCardFlipped = true;
+        inner.classList.add('rotate-y-180');
+      }
+      playKidChime('flip');
+      speakText(emotion.name + '! ' + emotion.speechText);
+
+      // Smooth scroll to card
+      document.getElementById('deck-card-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function drawRandomCard() {
+      let nextIndex = Math.floor(Math.random() * EMOTIONS.length);
+      if (nextIndex === currentCardIndex) {
+        nextIndex = (nextIndex + 1) % EMOTIONS.length;
+      }
+      currentCardIndex = nextIndex;
+      const emotion = EMOTIONS[currentCardIndex];
+      renderRevealedCard(emotion);
+      updatePromptBox(emotion);
+
+      const inner = document.getElementById('active-card-inner');
+      // If closed, open it; if open, quick flip reset
+      if (!isCardFlipped) {
+        isCardFlipped = true;
+        inner.classList.add('rotate-y-180');
+      } else {
+        inner.classList.remove('rotate-y-180');
+        setTimeout(() => {
+          inner.classList.add('rotate-y-180');
+        }, 220);
+      }
+
+      playKidChime('flip');
+      speakText(emotion.name + '! ' + emotion.speechText);
+    }
+
+    function speakCurrentCard() {
+      const emotion = EMOTIONS[currentCardIndex];
+      playKidChime('pop');
+      speakText(emotion.name + '! ' + emotion.speechText);
+    }
+
+    /* Render the 6 cards miniature grid */
+    function renderPreviewCardsGrid() {
+      const grid = document.getElementById('all-cards-preview-grid');
+      grid.innerHTML = EMOTIONS.map((emotion, idx) => `
+        <div onclick="selectCardDirectly(${idx})" class="cursor-pointer bg-white rounded-2xl p-2.5 flex flex-col items-center justify-between border-4 shadow-sm hover:shadow-md hover:-translate-y-1 transition transform" style="border-color: ${emotion.borderColor}; background-color: ${emotion.bgColor}">
+          <div class="w-full flex justify-center py-1">
+            ${getEmotionSvg(emotion.id, 65)}
+          </div>
+          <div class="text-sm font-extrabold ${emotion.textColor} text-center mt-1">${emotion.name}</div>
+        </div>
+      `).join('');
+    }
+
+    /* ====================================================================
+       5. MODE 2: MEMORY MATCH GAME
+       ==================================================================== */
+    let memoryDeck = [];
+    let flippedIndices = [];
+    let matchedPairs = 0;
+    let tapCount = 0;
+    let isMemoryBusy = false;
+
+    function initMemoryGame() {
+      matchedPairs = 0;
+      tapCount = 0;
+      isMemoryBusy = false;
+      flippedIndices = [];
+      document.getElementById('memory-matches-count').innerText = `0 / ${EMOTIONS.length}`;
+      document.getElementById('memory-taps-count').innerText = `0`;
+
+      // Create 12 cards (2 sets of 6 emotions)
+      const deck = [];
+      EMOTIONS.forEach((em, idx) => {
+        deck.push({ emotionId: em.id, name: em.name, color: em.borderColor, bg: em.bgColor, key: idx + '-a' });
+        deck.push({ emotionId: em.id, name: em.name, color: em.borderColor, bg: em.bgColor, key: idx + '-b' });
+      });
+
+      // Fisher-Yates Shuffle
+      for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+      }
+
+      memoryDeck = deck;
+      renderMemoryBoard();
+      playKidChime('pop');
+    }
+
+    function renderMemoryBoard() {
+      const grid = document.getElementById('memory-grid');
+      grid.innerHTML = memoryDeck.map((card, idx) => `
+        <div id="mem-card-${idx}" onclick="handleMemoryCardClick(${idx})" class="perspective-1000 aspect-[3/4] cursor-pointer">
+          <div id="mem-inner-${idx}" class="w-full h-full relative transform-style-3d transition-transform duration-300 rounded-2xl shadow-md">
+            
+            <!-- Face Down (Cover) -->
+            <div class="w-full h-full absolute backface-hidden rounded-2xl bg-amber-300 border-4 border-amber-400 flex flex-col items-center justify-center p-2 text-amber-800">
+              <span class="text-3xl sm:text-4xl">❤️</span>
+              <span class="text-xs font-black mt-2">TAP ME</span>
+            </div>
+
+            <!-- Face Up (Emotion) -->
+            <div class="w-full h-full absolute backface-hidden rotate-y-180 rounded-2xl border-4 flex flex-col items-center justify-between p-2" style="border-color: ${card.color}; background-color: ${card.bg}">
+              <div class="w-full text-right text-xs">✨</div>
+              <div class="flex-grow flex items-center justify-center">
+                ${getEmotionSvg(card.emotionId, 85)}
+              </div>
+              <span class="text-xs sm:text-sm font-extrabold text-slate-800">${card.name}</span>
+            </div>
+
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function handleMemoryCardClick(idx) {
+      if (isMemoryBusy) return;
+      if (flippedIndices.includes(idx)) return; // already flipped
+      const cardEl = document.getElementById(`mem-inner-${idx}`);
+      if (cardEl.dataset.matched === 'true') return;
+
+      playKidChime('flip');
+      cardEl.classList.add('rotate-y-180');
+      flippedIndices.push(idx);
+
+      tapCount++;
+      document.getElementById('memory-taps-count').innerText = tapCount;
+
+      if (flippedIndices.length === 2) {
+        checkMemoryMatch();
+      }
+    }
+
+    function checkMemoryMatch() {
+      isMemoryBusy = true;
+      const [idx1, idx2] = flippedIndices;
+      const card1 = memoryDeck[idx1];
+      const card2 = memoryDeck[idx2];
+
+      if (card1.emotionId === card2.emotionId) {
+        // MATCH!
+        setTimeout(() => {
+          playKidChime('match');
+          speakText(`You found ${card1.name}!`);
+
+          const el1 = document.getElementById(`mem-inner-${idx1}`);
+          const el2 = document.getElementById(`mem-inner-${idx2}`);
+          el1.dataset.matched = 'true';
+          el2.dataset.matched = 'true';
+          el1.parentElement.classList.add('ring-4', 'ring-green-400', 'rounded-2xl');
+          el2.parentElement.classList.add('ring-4', 'ring-green-400', 'rounded-2xl');
+
+          matchedPairs++;
+          document.getElementById('memory-matches-count').innerText = `${matchedPairs} / ${EMOTIONS.length}`;
+          flippedIndices = [];
+          isMemoryBusy = false;
+
+          // Check Win Condition
+          if (matchedPairs === EMOTIONS.length) {
+            triggerWinCelebration();
+          }
+        }, 500);
+      } else {
+        // NO MATCH -> Flip back
+        setTimeout(() => {
+          const el1 = document.getElementById(`mem-inner-${idx1}`);
+          const el2 = document.getElementById(`mem-inner-${idx2}`);
+          el1.classList.remove('rotate-y-180');
+          el2.classList.remove('rotate-y-180');
+          flippedIndices = [];
+          isMemoryBusy = false;
+        }, 1100);
+      }
+    }
+
+    function triggerWinCelebration() {
+      playKidChime('win');
+      speakText('Hurray! You matched all the emotion cards! Great job!');
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      }
+    }
+
+    /* ====================================================================
+       6. MODE 3: DAILY EMOTION CHECK-IN
+       ==================================================================== */
+    function renderCheckinList() {
+      const grid = document.getElementById('checkin-faces-grid');
+      grid.innerHTML = EMOTIONS.map(em => `
+        <button onclick="handleCheckinSelect('${em.id}')" class="bg-white hover:scale-105 active:scale-95 transition rounded-3xl p-4 border-4 shadow-md flex flex-col items-center justify-between" style="border-color: ${em.borderColor}; background-color: ${em.bgColor}">
+          <div class="py-2">
+            ${getEmotionSvg(em.id, 95)}
+          </div>
+          <span class="text-lg font-black ${em.textColor} mt-1">${em.name}</span>
+        </button>
+      `).join('');
+    }
+
+    function handleCheckinSelect(emotionId) {
+      const emotion = EMOTIONS.find(e => e.id === emotionId);
+      if (!emotion) return;
+
+      playKidChime('pop');
+      const responseCard = document.getElementById('checkin-response-card');
+      responseCard.classList.remove('hidden');
+      responseCard.style.borderColor = emotion.borderColor;
+
+      let actionHtml = '';
+
+      if (emotion.calmActionType === 'breathe') {
+        actionHtml = `
+          <div class="my-4 flex flex-col items-center">
+            <div class="w-24 h-24 rounded-full bg-red-100 border-4 border-red-300 flex items-center justify-center animate-breathe text-3xl">
+              🌬️
+            </div>
+            <p class="text-xs font-black text-red-600 mt-2 font-nunito uppercase tracking-wider">Breathe in... Breathe out...</p>
+          </div>
+        `;
+      } else if (emotion.calmActionType === 'comfort') {
+        actionHtml = `
+          <div class="my-4 text-5xl animate-gentle">
+            🧸
+          </div>
+        `;
+      } else if (emotion.calmActionType === 'celebrate') {
+        actionHtml = `
+          <div class="my-4 text-5xl animate-gentle">
+            🎉
+          </div>
+        `;
+      } else {
+        actionHtml = `
+          <div class="my-4 text-5xl">
+            ✨
+          </div>
+        `;
+      }
+
+      responseCard.innerHTML = `
+        <div class="w-16 h-16 rounded-2xl flex items-center justify-center mb-2" style="background-color: ${emotion.bgColor}">
+          ${getEmotionSvg(emotion.id, 50)}
+        </div>
+        <span class="text-xs uppercase font-extrabold px-3 py-1 rounded-full text-white ${emotion.badgeBg}">
+          You feel ${emotion.name}
+        </span>
+        <h3 class="text-2xl font-black text-slate-800 mt-3">${emotion.calmTitle}</h3>
+        <p class="text-slate-600 font-nunito mt-2 text-base leading-relaxed max-w-md">${emotion.calmText}</p>
+        
+        ${actionHtml}
+
+        <button onclick="speakText('${emotion.calmText.replace(/'/g, "\\'")}')" class="mt-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white font-bold rounded-xl flex items-center gap-2 text-sm shadow-sm active:scale-95">
+          <span>🔊</span> Read to me
+        </button>
+      `;
+
+      speakText(`Thank you for sharing that you feel ${emotion.name}. ` + emotion.calmText);
+
+      // Trigger confetti on Happy or Excited
+      if ((emotion.id === 'happy' || emotion.id === 'excited') && typeof confetti === 'function') {
+        confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
+      }
+
+      responseCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    /* ====================================================================
+       7. INITIALIZATION ON LOAD
+       ==================================================================== */
+    window.addEventListener('load', () => {
+      renderRevealedCard(EMOTIONS[0]);
+      updatePromptBox(EMOTIONS[0]);
+      renderPreviewCardsGrid();
+
+      // Enable Web Audio on first user interaction anywhere
+      const unlockAudio = () => {
+        getAudioContext();
+        window.removeEventListener('pointerdown', unlockAudio);
+      };
+      window.addEventListener('pointerdown', unlockAudio);
+    });
+  </script>
+</body>
+</html>
